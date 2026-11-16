@@ -1,0 +1,61 @@
+name: API Sentinel isolated test run
+run-name: "API Sentinel Run #${{ inputs.sentinelRunId }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      sentinelRunId:
+        description: API Sentinel run identifier
+        required: true
+        type: string
+      commitSha:
+        description: Exact analyzed commit to test
+        required: true
+        type: string
+      testFramework:
+        description: Test framework selected by API Sentinel
+        required: true
+        type: choice
+        options:
+          - jest
+          - vitest
+      workingDirectory:
+        description: Directory containing package.json and the npm lockfile
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.commitSha }}
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+      - name: Install dependencies
+        working-directory: ${{ inputs.workingDirectory }}
+        run: npm ci --ignore-scripts=false
+      - name: Run full Jest suite
+        if: inputs.testFramework == 'jest'
+        id: jest
+        continue-on-error: true
+        working-directory: ${{ inputs.workingDirectory }}
+        run: npx --no-install jest --runInBand --json --outputFile=api-sentinel-results.json
+      - name: Run full Vitest suite
+        if: inputs.testFramework == 'vitest'
+        id: vitest
+        continue-on-error: true
+        working-directory: ${{ inputs.workingDirectory }}
+        run: npx --no-install vitest run
+      - name: Report assertion failures
+        if: always() && (steps.jest.outcome == 'failure' || steps.vitest.outcome == 'failure')
+        run: exit 1

@@ -1,0 +1,33 @@
+import { Router } from 'express';
+import { requireAuthentication } from '../../middleware/authenticate.js';
+import { requireCsrf } from '../../middleware/csrf.js';
+import { requireGitHubApp } from '../../middleware/requireGitHubApp.js';
+import { connectRepository, disconnectRepository, finishAppInstallation, listAvailableRepositories, listConnectedBranches, listConnectedRepositories, listInstallations, startAppInstallation, updateSelectedBranch } from './github.controller.js';
+import { createRepositoryAnalysis, getLatestRepositoryAnalysis, getRepositoryAnalysis, listRepositoryAnalyses } from '../analysis/analysis.controller.js';
+import { compareRepositoryImpact } from '../analysis/impact.controller.js';
+import { listExecutionRuns, refreshExecutionRun, startExecutionRun } from '../execution/execution.controller.js';
+
+export const githubRouter = Router();
+githubRouter.use(requireAuthentication);
+githubRouter.use(requireGitHubApp);
+githubRouter.get('/app/install', startAppInstallation);
+githubRouter.get('/app/setup', finishAppInstallation);
+githubRouter.get('/installations', listInstallations);
+githubRouter.get('/installations/:installationId/repositories', listAvailableRepositories);
+
+export const repositoryRouter = Router();
+repositoryRouter.use(requireAuthentication);
+repositoryRouter.use(requireGitHubApp);
+repositoryRouter.get('/', listConnectedRepositories);
+repositoryRouter.post('/', requireCsrf, connectRepository);
+repositoryRouter.post('/:id/analyses', requireCsrf, createRepositoryAnalysis);
+repositoryRouter.post('/:id/impact', requireCsrf, compareRepositoryImpact);
+repositoryRouter.post('/:id/runs', requireCsrf, startExecutionRun);
+repositoryRouter.get('/:id/runs', listExecutionRuns);
+repositoryRouter.post('/:id/runs/:runId/refresh', requireCsrf, refreshExecutionRun);
+repositoryRouter.get('/:id/analyses', listRepositoryAnalyses);
+repositoryRouter.get('/:id/analyses/latest', getLatestRepositoryAnalysis);
+repositoryRouter.get('/:id/analyses/:analysisId', getRepositoryAnalysis);
+repositoryRouter.get('/:id/branches', listConnectedBranches);
+repositoryRouter.patch('/:id/branch', requireCsrf, updateSelectedBranch);
+repositoryRouter.delete('/:id', requireCsrf, disconnectRepository);
