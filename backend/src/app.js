@@ -34,7 +34,7 @@ export function createApp() {
     saveUninitialized: false,
     rolling: true,
     store: MongoStore.create({ mongoUrl: env.MONGODB_URI, collectionName: 'sessions', ttl: 60 * 60 * 24 * 7, autoRemove: 'native' }),
-    cookie: { httpOnly: true, secure: env.isProduction, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000, path: '/' },
+    cookie: { httpOnly: true, secure: env.isProduction, sameSite: env.isProduction ? 'none' : 'lax', maxAge: 7 * 24 * 60 * 60 * 1000, path: '/' },
   }));
 
   app.get('/api/v1/health', (_req, res) => {
