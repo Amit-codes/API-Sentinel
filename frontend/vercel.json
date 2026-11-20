@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "https://api-sentinel-backend.vercel.app/api/v1/:path*"
+    }
+  ]
+}
