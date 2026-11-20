@@ -1,7 +1,7 @@
 const configuredApiBase = import.meta.env.VITE_API_BASE_URL?.trim();
 // Production uses the frontend origin and Vercel rewrites /api/v1 to the API host.
 // That keeps the session cookie first-party, including in browsers that block third-party cookies.
-const API_BASE = (configuredApiBase || (import.meta.env.PROD ? '' : 'http://localhost:4000')).replace(/\/$/, '');
+const API_BASE = (import.meta.env.PROD ? '' : configuredApiBase || 'http://localhost:4000').replace(/\/$/, '');
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}/api/v1${path}`, { credentials: 'include', ...options });
